@@ -14,18 +14,27 @@ function HomePage() {
     setAnalysisResult('');
 
     try {
-      // 实际应用中，transactionData 应该是一个对象或数组
-      // 这里为了简化，我们假设用户直接输入 JSON 字符串
-      let parsedTransactionData = null;
-      if (transactionData) {
-        try {
-          parsedTransactionData = JSON.parse(transactionData);
-        } catch (jsonError) {
-          setError('无效的交易数据格式，请输入有效的 JSON。');
-          setLoading(false);
-          return;
+      // 解析纯文本交易数据
+      const transactions = transactionData.split('\n').map(line => line.trim()).filter(line => line);
+      const parsedTransactionData = transactions.map(line => {
+        const parts = line.split(',').map(part => part.trim());
+        if (parts.length === 3) {
+          // 假设格式: 日期, 描述, 金额
+          return {
+            date: parts[0],
+            description: parts[1],
+            amount: parseFloat(parts[2]) // 将金额转换为数字
+          };
         }
-      }
+        return null; // 忽略格式不正确的行
+      }).filter(transaction => transaction !== null);
+
+      // if (parsedTransactionData.length === 0 && transactionData.length > 0) {
+      //   // 可选：如果用户输入了文本但没有成功解析任何交易，可以提示错误
+      //   setError('未能解析任何交易数据。请检查输入格式是否正确（例如：日期, 描述, 金额）。');
+      //   setLoading(false);
+      //   return;
+      // }
 
 
       const response = await fetch('/api/analyze', {
@@ -35,7 +44,7 @@ function HomePage() {
         },
         body: JSON.stringify({
           userDescription: userDescription,
-          transactionData: parsedTransactionData,
+          transactionData: parsedTransactionData, // 发送解析后的数据
         }),
       });
 
@@ -132,7 +141,7 @@ function HomePage() {
           ></textarea>
         </div>
         <div>
-          <label htmlFor="transactions">交易数据 (JSON 格式):</label>
+          <label htmlFor="transactions">交易数据 (每行: 日期, 描述, 金额):</label>
           <br />
           <textarea
             id="transactions"
