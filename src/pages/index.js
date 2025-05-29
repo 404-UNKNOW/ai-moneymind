@@ -55,6 +55,66 @@ function HomePage() {
     }
   };
 
+  const renderAnalysisResult = () => {
+    if (!analysisResult) return null;
+
+    // Simple parsing logic (adjust based on actual AI output format)
+    const sections = analysisResult.split('\n\n'); // Assuming sections are separated by double newlines
+    const structuredResult = {};
+
+    sections.forEach(section => {
+      if (section.startsWith('支出模式总结:')) {
+        structuredResult.summary = section.replace('支出模式总结:', '').trim();
+      } else if (section.startsWith('储蓄建议:')) {
+        // Assuming suggestions are in a list format after the heading
+        structuredResult.suggestions = section.replace('储蓄建议:', '').trim().split('\n').map(item => item.trim()).filter(item => item);
+      } else if (section.startsWith('目标建议:')) {
+         // Assuming goal suggestions are in a list format after the heading
+        structuredResult.goalSuggestions = section.replace('目标建议:', '').trim().split('\n').map(item => item.trim()).filter(item => item);
+      } else {
+        // Handle other potential sections or introductory text
+        if (!structuredResult.intro) {
+            structuredResult.intro = section.trim();
+        } else {
+            structuredResult.intro += '\n\n' + section.trim();
+        }
+      }
+    });
+
+    return (
+      <div className="result-container">
+        <h2>财务分析结果:</h2>
+        {structuredResult.intro && <p>{structuredResult.intro}</p>}
+        {structuredResult.summary && (
+          <div>
+            <h3>支出模式总结:</h3>
+            <p>{structuredResult.summary}</p>
+          </div>
+        )}
+        {structuredResult.suggestions && structuredResult.suggestions.length > 0 && (
+          <div>
+            <h3>储蓄建议:</h3>
+            <ul>
+              {structuredResult.suggestions.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+         {structuredResult.goalSuggestions && structuredResult.goalSuggestions.length > 0 && (
+          <div>
+            <h3>目标建议:</h3>
+            <ul>
+              {structuredResult.goalSuggestions.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       <h1>MoneyMind 财务分析</h1>
@@ -90,12 +150,7 @@ function HomePage() {
 
       {error && <div style={{ color: 'red' }}>错误: {error}</div>}
 
-      {analysisResult && (
-        <div className="result-container">
-          <h2>分析结果:</h2>
-          <p>{analysisResult}</p>
-        </div>
-      )}
+      {renderAnalysisResult()}
     </div>
   );
 }
