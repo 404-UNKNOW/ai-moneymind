@@ -19,9 +19,9 @@ function HomePage() {
     const errors = [];
 
     transactions.forEach((line, index) => {
-      const parts = line.split(',').map(part => part.trim());
-      if (parts.length === 3) {
-        const [date, description, amountStr] = parts;
+      const parsedTransactionData = line.split(/[,，]/).map(part => part.trim());
+      if (parsedTransactionData.length === 3) {
+        const [date, description, amountStr] = parsedTransactionData;
         const amount = parseFloat(amountStr);
 
         // 简单的日期格式验证 (可以根据需要更复杂)
