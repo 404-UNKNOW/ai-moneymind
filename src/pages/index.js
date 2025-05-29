@@ -151,13 +151,19 @@ function HomePage() {
             onChange={(e) => setTransactionData(e.target.value)}
             disabled={loading}
           ></textarea>
+          <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+            每行输入一笔交易，格式示例: 2023-10-26, 咖啡, -30
+          </p>
         </div>
         <button type="submit" disabled={loading}>
           {loading ? '分析中...' : '获取财务分析'}
         </button>
+
+        {loading && <p style={{ textAlign: 'center', marginTop: '10px', color: '#007bff' }}>正在进行财务分析...</p>}
+
       </form>
 
-      {error && <div style={{ color: 'red' }}>错误: {error}</div>}
+      {error && <div style={{ color: 'red', fontWeight: 'bold', marginTop: '10px' }}>错误: {error}</div>}
 
       {renderAnalysisResult()}
     </div>
