@@ -13,30 +13,49 @@ function HomePage() {
     setError(null);
     setAnalysisResult('');
 
-    try {
-      // 解析纯文本交易数据
-      const transactions = transactionData.split('\n').map(line => line.trim()).filter(line => line);
-      const parsedTransactionData = transactions.map(line => {
-        const parts = line.split(',').map(part => part.trim());
-        if (parts.length === 3) {
-          // 假设格式: 日期, 描述, 金额
-          return {
-            date: parts[0],
-            description: parts[1],
-            amount: parseFloat(parts[2]) // 将金额转换为数字
-          };
+    // 前端数据格式验证
+    const transactions = transactionData.split('\n').map(line => line.trim()).filter(line => line);
+    const formattedTransactions = [];
+    const errors = [];
+
+    transactions.forEach((line, index) => {
+      const parts = line.split(',').map(part => part.trim());
+      if (parts.length === 3) {
+        const [date, description, amountStr] = parts;
+        const amount = parseFloat(amountStr);
+
+        // 简单的日期格式验证 (可以根据需要更复杂)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+           errors.push(`第 ${index + 1} 行: 日期格式不正确 (应为 YYYY-MM-DD)。`);
+           return;
         }
-        return null; // 忽略格式不正确的行
-      }).filter(transaction => transaction !== null);
 
-      // if (parsedTransactionData.length === 0 && transactionData.length > 0) {
-      //   // 可选：如果用户输入了文本但没有成功解析任何交易，可以提示错误
-      //   setError('未能解析任何交易数据。请检查输入格式是否正确（例如：日期, 描述, 金额）。');
-      //   setLoading(false);
-      //   return;
-      // }
+        // 金额验证
+        if (isNaN(amount)) {
+          errors.push(`第 ${index + 1} 行: 金额不是有效的数字。`);
+          return;
+        }
 
+        formattedTransactions.push({
+          date: date,
+          description: description,
+          amount: amount
+        });
 
+      } else if (line.length > 0) { // 只对非空行进行错误提示
+        errors.push(`第 ${index + 1} 行: 格式不正确 (应为 日期, 描述, 金额)。`);
+      }
+    });
+
+    if (errors.length > 0) {
+      setError('交易数据存在格式错误：\n' + errors.join('\n'));
+      setLoading(false);
+      return; // 阻止发送请求
+    }
+
+    // 如果没有错误，继续发送请求
+    try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -44,7 +63,7 @@ function HomePage() {
         },
         body: JSON.stringify({
           userDescription: userDescription,
-          transactionData: parsedTransactionData, // 发送解析后的数据
+          transactionData: formattedTransactions, // 发送验证和格式化后的数据
         }),
       });
 
