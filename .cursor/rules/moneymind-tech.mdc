@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# MoneyMind 技术实现概览
+
+MoneyMind 项目的关键技术栈和部署策略如下：
+
+-   **核心 AI**: 使用 Google Gemini 模型进行自然语言分析和智能建议。
+-   **部署平台**: 部署在 Vercel 上，利用其无缝的前后端集成、自动扩展、边缘网络和简化的 CI/CD 流程。
+-   **API 调用示例**: 项目将包含调用 Google Gemini API 进行支出分析等功能的代码。
+
+```javascript
+// 示例API调用Google Gemini进行支出分析 (请参考实际文件获取完整代码)
+const analyzeSpending = async (userDescription) => {
+  // ... API call logic ...
+};
+```
+
+_(注意：上述代码示例仅为示意，具体实现请参考项目文件)_
+
+
