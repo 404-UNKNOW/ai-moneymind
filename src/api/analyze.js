@@ -26,7 +26,12 @@ export default async function handler(req, res) {
     // 结合用户描述和交易数据进行分析
     const prompt = `用户描述: "${userDescription || '无'}"
 关联的银行交易数据: ${JSON.stringify(transactionData || '无')}
-请用简单语言分析支出模式并给出3条具体改进建议，避免专业术语。`;
+
+请根据以上信息，用简单易懂的语言进行财务分析，并提供以下内容：
+1. 总结主要的支出模式。
+2. 给出至少3条具体的、可操作的储蓄建议。这些建议应该与用户的描述或交易数据相关联，例如"减少咖啡支出可月省xxx元"等。
+3. 如果用户提到了财务目标，请给出与该目标相关的初步财务行动建议或思路。
+请避免使用复杂的财务术语。`;
 
     // 调用 Gemini API
     const result = await model.generateContent(prompt);
