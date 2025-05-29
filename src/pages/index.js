@@ -91,7 +91,7 @@ function HomePage() {
       {error && <div style={{ color: 'red' }}>错误: {error}</div>}
 
       {analysisResult && (
-        <div>
+        <div className="result-container">
           <h2>分析结果:</h2>
           <p>{analysisResult}</p>
         </div>
