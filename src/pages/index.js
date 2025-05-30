@@ -98,8 +98,18 @@ function HomePage() {
       if (section.startsWith('支出模式总结:')) {
         structuredResult.summary = section.replace('支出模式总结:', '').trim();
       } else if (section.startsWith('储蓄建议:')) {
-        // Assuming suggestions are in a list format after the heading
-        structuredResult.suggestions = section.replace('储蓄建议:', '').trim().split('\n').map(item => item.trim()).filter(item => item);
+        // Assuming suggestions are in a list format after the heading, with category noted
+        const suggestionsText = section.replace('储蓄建议:', '').trim();
+        structuredResult.suggestions = suggestionsText.split('\n')
+            .map(item => item.trim())
+            .filter(item => item)
+            .map(item => {
+                const parts = item.split(/[:：]/).map(part => part.trim()); // 使用冒号或全角冒号分隔类别和建议
+                if (parts.length >= 2) {
+                    return { category: parts[0], suggestion: parts.slice(1).join(': ').trim() };
+                }
+                return { category: '通用', suggestion: item }; // 如果没有找到类别，标记为通用
+            });
       } else if (section.startsWith('目标建议:')) {
          // Assuming goal suggestions are in a list format after the heading
         structuredResult.goalSuggestions = section.replace('目标建议:', '').trim().split('\n').map(item => item.trim()).filter(item => item);
@@ -128,7 +138,10 @@ function HomePage() {
             <h3>储蓄建议:</h3>
             <ul>
               {structuredResult.suggestions.map((item, index) => (
-                <li key={index}>{item}</li>
+                <li key={index}>
+                    {item.category && <strong>{item.category}: </strong>}
+                    {item.suggestion}
+                </li>
               ))}
             </ul>
           </div>
