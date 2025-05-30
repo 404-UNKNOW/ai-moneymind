@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function HomePage() {
   const [userDescription, setUserDescription] = useState('');
@@ -10,6 +14,7 @@ function HomePage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [expenseData, setExpenseData] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -78,6 +83,7 @@ function HomePage() {
 
       const data = await response.json();
       setAnalysisResult(data.analysis);
+      setExpenseData(data.expenseCategories);
 
     } catch (error) {
       setError(error.message);
@@ -88,72 +94,66 @@ function HomePage() {
   };
 
   const renderAnalysisResult = () => {
-    if (!analysisResult) return null;
+    if (!analysisResult && !expenseData) return null;
 
-    // Simple parsing logic (adjust based on actual AI output format)
-    const sections = analysisResult.split('\n\n'); // Assuming sections are separated by double newlines
-    const structuredResult = {};
+    // 构建饼状图数据
+    const chartData = {
+        labels: Object.keys(expenseData || {}),
+        datasets: [
+            {
+                data: Object.values(expenseData || {}),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966CC',
+                    '#FF9F40'
+                ],
+                hoverBackgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966CC',
+                    '#FF9F40'
+                ]
+            }
+        ]
+    };
 
-    sections.forEach(section => {
-      if (section.startsWith('支出模式总结:')) {
-        structuredResult.summary = section.replace('支出模式总结:', '').trim();
-      } else if (section.startsWith('储蓄建议:')) {
-        // Assuming suggestions are in a list format after the heading, with category noted
-        const suggestionsText = section.replace('储蓄建议:', '').trim();
-        structuredResult.suggestions = suggestionsText.split('\n')
-            .map(item => item.trim())
-            .filter(item => item)
-            .map(item => {
-                const parts = item.split(/[:：]/).map(part => part.trim()); // 使用冒号或全角冒号分隔类别和建议
-                if (parts.length >= 2) {
-                    return { category: parts[0], suggestion: parts.slice(1).join(': ').trim() };
-                }
-                return { category: '通用', suggestion: item }; // 如果没有找到类别，标记为通用
-            });
-      } else if (section.startsWith('目标建议:')) {
-         // Assuming goal suggestions are in a list format after the heading
-        structuredResult.goalSuggestions = section.replace('目标建议:', '').trim().split('\n').map(item => item.trim()).filter(item => item);
-      } else {
-        // Handle other potential sections or introductory text
-        if (!structuredResult.intro) {
-            structuredResult.intro = section.trim();
-        } else {
-            structuredResult.intro += '\n\n' + section.trim();
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: '支出类别分布'
+            }
         }
-      }
-    });
+    };
 
     return (
       <div className="result-container">
         <h2>财务分析结果:</h2>
-        {structuredResult.intro && <p>{structuredResult.intro}</p>}
-        {structuredResult.summary && (
+        {expenseData && Object.keys(expenseData).length > 0 && (
+            <div style={{ width: '400px', height: '400px', margin: '20px auto' }}>
+                <Pie data={chartData} options={chartOptions} />
+            </div>
+        )}
+        {analysisResult && (
           <div>
             <h3>支出模式总结:</h3>
-            <p>{structuredResult.summary}</p>
+            <p>{analysisResult}</p>
           </div>
         )}
-        {structuredResult.suggestions && structuredResult.suggestions.length > 0 && (
+        {expenseData && (
           <div>
-            <h3>储蓄建议:</h3>
-            <ul>
-              {structuredResult.suggestions.map((item, index) => (
-                <li key={index}>
-                    {item.category && <strong>{item.category}: </strong>}
-                    {item.suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-         {structuredResult.goalSuggestions && structuredResult.goalSuggestions.length > 0 && (
-          <div>
-            <h3>目标建议:</h3>
-            <ul>
-              {structuredResult.goalSuggestions.map((item, index) => (
-                <li key={index}>{item}</li>
-              ))}
-            </ul>
+            <h3>支出类别分布:</h3>
+            <p>{JSON.stringify(expenseData)}</p>
           </div>
         )}
       </div>
