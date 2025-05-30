@@ -31,10 +31,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userDescription, transactionData } = req.body;
+    const { userDescription, transactionData, financialGoal } = req.body;
 
-    if (!userDescription && !transactionData) {
-      return res.status(400).json({ message: 'Missing userDescription or transactionData' });
+    if (!userDescription && !transactionData && !financialGoal) {
+      return res.status(400).json({ message: 'Missing userDescription, transactionData, or financialGoal' });
     }
 
     // 处理交易数据，计算支出类别总金额
@@ -60,13 +60,14 @@ export default async function handler(req, res) {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     // 构建发送给 AI 的提示词
-    // 结合用户描述和交易数据进行分析
+    // 结合用户描述、交易数据和财务目标进行分析
     const prompt = `用户描述: "${userDescription || '无'}"
 关联的银行交易数据: ${JSON.stringify(transactionData || '无')}
+我的财务目标是: "${financialGoal || '无'}"
 
-请根据以上信息，用简单易懂的语言进行财务分析，并提供以下内容：
+请根据以上信息，特别是我的财务目标，用简单易懂的语言进行财务分析，并提供以下内容：
 1. 总结主要的支出模式，并参考我已计算的支出类别总金额（${JSON.stringify(expenseCategories)}）。
-2. 给出至少3条具体的、可操作的储蓄建议。这些建议应该与用户的描述或交易数据相关联。请在每条储蓄建议前注明相关的支出类别（例如：餐饮：每天少买一杯咖啡可月省$100）。
+2. 给出至少3条具体的、可操作的储蓄建议。这些建议应该与我的财务目标、用户描述或交易数据相关联。请在每条储蓄建议前注明相关的支出类别（例如：餐饮：每天少买一杯咖啡可月省$100）。
 3. 如果用户提到了财务目标，请给出与该目标相关的初步财务行动建议或思路。
 请避免使用复杂的财务术语。`;
 
