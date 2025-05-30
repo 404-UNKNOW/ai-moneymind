@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message, chatHistory } = req.body;
+    const { message, chatHistory, analysisResult } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: 'Missing message in request body' });
@@ -30,14 +30,11 @@ export default async function handler(req, res) {
     // 获取 Gemini Pro 模型
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // 构建发送给 AI 的内容，包括历史和当前消息
+    // 构建发送给 AI 的内容，包括系统指令、分析结果、历史和当前消息
     const contents = [
-        // 添加一个系统级别的角色指令，指导AI行为（可选，但推荐）
-        // 这部分内容不会出现在实际对话中，但会影响AI回复风格
-        { role: "system", parts: [{ text: "你是一个友好的AI财务教练，专门用简单易懂的语言为非技术用户提供个人财务指导和解释。请根据以下会话历史和用户问题给出回答，并使用 Markdown 格式组织你的回复，例如使用标题、列表、加粗等。" }] },
-        // 添加格式化后的聊天历史
+        { role: "system", parts: [{ text: "你是一个友好的AI财务教练，专门用简单易懂的语言为非技术用户提供个人财务指导和解释。请根据以下提供的财务分析结果、会话历史和用户问题给出回答，并使用 Markdown 格式组织你的回复，例如使用标题、列表、加粗等。" }] },
+        ...(analysisResult ? [{ role: "user", parts: [{ text: `用户财务分析结果：\n${analysisResult}` }] }, { role: "model", parts: [{ text: "好的，我已经参考了您的财务分析结果。" }] }] : []),
         ...history,
-        // 添加当前用户消息
         { role: "user", parts: [{ text: message }] }
     ];
 

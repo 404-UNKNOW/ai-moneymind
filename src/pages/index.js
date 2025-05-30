@@ -165,7 +165,8 @@ function HomePage() {
               },
               body: JSON.stringify({
                   message: newUserMessage.text,
-                  chatHistory: chatMessages
+                  chatHistory: chatMessages,
+                  analysisResult: analysisResult
               }),
           });
 
