@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 function HomePage() {
   const [userDescription, setUserDescription] = useState('');
@@ -162,7 +163,10 @@ function HomePage() {
               headers: {
                   'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ message: newUserMessage.text }),
+              body: JSON.stringify({
+                  message: newUserMessage.text,
+                  chatHistory: chatMessages
+              }),
           });
 
           if (!response.ok) {
@@ -240,7 +244,7 @@ function HomePage() {
                 display: 'inline-block',
                 wordBreak: 'break-word'
               }}>
-                {msg.text}
+                {msg.sender === 'ai' ? <ReactMarkdown>{msg.text}</ReactMarkdown> : msg.text}
               </span>
             </div>
           ))}
