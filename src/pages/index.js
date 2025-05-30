@@ -6,6 +6,9 @@ function HomePage() {
   const [analysisResult, setAnalysisResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -143,6 +146,43 @@ function HomePage() {
     );
   };
 
+  const handleSendMessage = async (event) => {
+      event.preventDefault();
+      if (!chatInput.trim() || chatLoading) return;
+
+      const newUserMessage = { sender: 'user', text: chatInput };
+      setChatMessages(prevMessages => [...prevMessages, newUserMessage]);
+      setChatInput('');
+      setChatLoading(true);
+      setError(null);
+
+      try {
+          const response = await fetch('/api/chat', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: newUserMessage.text }),
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || '聊天请求失败');
+          }
+
+          const data = await response.json();
+          const aiMessage = { sender: 'ai', text: data.reply };
+          setChatMessages(prevMessages => [...prevMessages, aiMessage]);
+
+      } catch (error) {
+          setError(error.message);
+          console.error('Frontend chat fetch error:', error);
+          setChatMessages(prevMessages => [...prevMessages, { sender: 'system', text: `错误: ${error.message}` }]);
+      } finally {
+          setChatLoading(false);
+      }
+  };
+
   return (
     <div>
       <h1>MoneyMind 财务分析</h1>
@@ -185,6 +225,46 @@ function HomePage() {
       {error && <div style={{ color: 'red', fontWeight: 'bold', marginTop: '10px' }}>错误: {error}</div>}
 
       {renderAnalysisResult()}
+
+      <div style={{ marginTop: '40px', borderTop: '1px solid #ccc', paddingTop: '20px' }}>
+        <h2>AI 财务教练聊天</h2>
+        <div style={{ height: '300px', border: '1px solid #ccc', overflowY: 'scroll', padding: '10px', marginBottom: '10px' }}>
+          {chatMessages.map((msg, index) => (
+            <div key={index} style={{ marginBottom: '10px', textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
+              <span style={{
+                backgroundColor: msg.sender === 'user' ? '#007bff' : '#e9e9eb',
+                color: msg.sender === 'user' ? 'white' : 'black',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                maxWidth: '70%',
+                display: 'inline-block',
+                wordBreak: 'break-word'
+              }}>
+                {msg.text}
+              </span>
+            </div>
+          ))}
+           {chatLoading && (
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ fontStyle: 'italic', color: '#666' }}>AI 正在思考...</span>
+            </div>
+          )}
+        </div>
+        <form onSubmit={handleSendMessage} style={{ display: 'flex', padding: 0, boxShadow: 'none' }}>
+          <textarea
+            rows="2"
+            cols="50"
+            style={{ flexGrow: 1, marginRight: '10px' }}
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            disabled={chatLoading}
+            placeholder="输入您的问题..."
+          ></textarea>
+          <button type="submit" disabled={chatLoading} style={{ width: 'auto' }}>
+            发送
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
